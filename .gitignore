@@ -1,0 +1,18 @@
+.DS_Store
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/src/**/*.js
+frontend/src/**/*.js.map
+
+# Backend
+backend/target/
+target/
+
+# IDE
+.idea/
+.vscode/

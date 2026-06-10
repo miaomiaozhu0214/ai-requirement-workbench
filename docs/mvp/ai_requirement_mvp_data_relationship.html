@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI需求工作台 MVP 数据关系图</title>
+  <style>
+    :root{--bg:#f5f7fb;--panel:#fff;--text:#1f2937;--muted:#667085;--line:#e5e7eb;--blue:#2563eb;--green:#12b76a;--orange:#f79009;--red:#ef4444;--purple:#7c3aed;--shadow:0 10px 25px rgba(15,23,42,.08);--radius:16px}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;color:var(--text);line-height:1.55}.wrap{max-width:1280px;margin:0 auto;padding:28px}.hero{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#fff;border-radius:24px;padding:30px;box-shadow:var(--shadow)}.hero h1{margin:0 0 8px;font-size:30px}.hero p{margin:0;color:#dbeafe}.section{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}.section h2{margin:0 0 14px}.section h3{margin:22px 0 10px}.muted{color:var(--muted)}.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;background:#eef2ff;color:#3730a3}.dot{width:8px;height:8px;border-radius:50%;background:var(--blue)}.dot.green{background:var(--green)}.dot.orange{background:var(--orange)}.dot.red{background:var(--red)}.dot.purple{background:var(--purple)}
+    .flow{display:flex;align-items:stretch;gap:12px;overflow:auto;padding:6px 0 12px}.node{min-width:190px;background:#fff;border:1px solid var(--line);border-top:5px solid var(--blue);border-radius:14px;padding:14px;box-shadow:0 4px 12px rgba(15,23,42,.04)}.node.green{border-top-color:var(--green)}.node.orange{border-top-color:var(--orange)}.node.red{border-top-color:var(--red)}.node.purple{border-top-color:var(--purple)}.node strong{display:block;margin-bottom:6px}.node small{display:block;color:var(--muted)}.arrow{display:flex;align-items:center;color:#94a3b8;font-size:28px;min-width:24px}.arrow.down{justify-content:center;font-size:24px}.grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.card{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}.card h4{margin:0 0 8px}.card ul{margin:8px 0 0;padding-left:18px}.table{width:100%;border-collapse:collapse;margin-top:12px}.table th,.table td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;font-size:14px}.table th{background:#f9fafb;color:#475467}.er{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:14px}.entity{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}.entity .hd{padding:10px 12px;background:#eff6ff;border-bottom:1px solid #bfdbfe;font-weight:700;color:#1d4ed8}.entity.green .hd{background:#ecfdf3;border-color:#abefc6;color:#027a48}.entity.orange .hd{background:#fff7ed;border-color:#fed7aa;color:#b54708}.entity.purple .hd{background:#f5f3ff;border-color:#ddd6fe;color:#5b21b6}.entity.red .hd{background:#fef2f2;border-color:#fecaca;color:#b42318}.entity .bd{padding:10px 12px}.field{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;color:#475467;margin:4px 0}.sequence{position:relative;padding-left:28px}.sequence:before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:#d0d5dd}.step{position:relative;margin:0 0 16px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.step:before{content:attr(data-step);position:absolute;left:-28px;top:14px;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}.code{background:#0f172a;color:#dbeafe;border-radius:12px;padding:14px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;line-height:1.6}.matrix{display:grid;grid-template-columns:220px repeat(5,1fr);border:1px solid var(--line);border-radius:14px;overflow:hidden}.matrix div{padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-size:13px}.matrix div:nth-child(6n){border-right:0}.matrix .head{background:#f9fafb;font-weight:700}.yes{color:#027a48;font-weight:700}.no{color:#b42318;font-weight:700}.warn{color:#b54708;font-weight:700}@media(max-width:900px){.grid-2,.grid-3,.er{grid-template-columns:1fr}.matrix{display:block}.matrix div{border-right:0}.wrap{padding:14px}.hero h1{font-size:24px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <h1>AI需求工作台 MVP 数据关系图</h1>
+    <p>围绕“网页对话 → AI识别 → 候选需求 → 正式需求 → PRD → HTML原型 → 查询复用”的数据产生、影响和追溯关系。</p>
+    <div class="legend">
+      <span class="badge"><span class="dot"></span>会话与消息</span>
+      <span class="badge"><span class="dot green"></span>需求资产</span>
+      <span class="badge"><span class="dot orange"></span>PRD与原型</span>
+      <span class="badge"><span class="dot purple"></span>AI配置与Trace</span>
+      <span class="badge"><span class="dot red"></span>异常与反馈</span>
+    </div>
+  </header>
+
+  <section class="section">
+    <h2>1. MVP主数据流</h2>
+    <p class="muted">数据从用户自然语言输入开始，经过后端编排和AI结构化处理，逐步沉淀为可查询、可追溯、可复用的需求资产。</p>
+    <div class="flow">
+      <div class="node"><strong>用户输入</strong><small>网页对话框、/命令、按钮动作</small></div><div class="arrow">→</div>
+      <div class="node"><strong>conversation_message</strong><small>保存原始消息，先落库再调用AI</small></div><div class="arrow">→</div>
+      <div class="node purple"><strong>AI路由识别</strong><small>识别intent、target、nextActions</small></div><div class="arrow">→</div>
+      <div class="node purple"><strong>AI需求抽取</strong><small>输出结构化patch，不直接写库</small></div><div class="arrow">→</div>
+      <div class="node green"><strong>requirement_candidate</strong><small>候选需求实时更新</small></div><div class="arrow">→</div>
+      <div class="node green"><strong>requirement</strong><small>人工确认后生成正式需求</small></div><div class="arrow">→</div>
+      <div class="node orange"><strong>PRD / Prototype</strong><small>结构化PRD与HTML原型</small></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>2. 核心实体ER关系</h2>
+    <div class="er">
+      <div class="entity"><div class="hd">conversation_session</div><div class="bd"><div class="field">id PK</div><div class="field">title</div><div class="field">current_stage</div><div class="field">summary</div><div class="field">candidate_count</div></div></div>
+      <div class="entity"><div class="hd">conversation_message</div><div class="bd"><div class="field">id PK</div><div class="field">session_id FK</div><div class="field">role</div><div class="field">message_type</div><div class="field">content</div></div></div>
+      <div class="entity green"><div class="hd">requirement_candidate</div><div class="bd"><div class="field">id PK</div><div class="field">session_id FK</div><div class="field">content_json</div><div class="field">completeness_score</div><div class="field">converted_requirement_id</div></div></div>
+      <div class="entity green"><div class="hd">requirement_candidate_patch</div><div class="bd"><div class="field">id PK</div><div class="field">candidate_id FK</div><div class="field">source_message_id FK</div><div class="field">patch_json</div><div class="field">ai_trace_id FK</div></div></div>
+      <div class="entity green"><div class="hd">requirement</div><div class="bd"><div class="field">id PK</div><div class="field">source_session_id FK</div><div class="field">source_candidate_id FK</div><div class="field">content_json</div><div class="field">status</div></div></div>
+      <div class="entity green"><div class="hd">requirement_version</div><div class="bd"><div class="field">id PK</div><div class="field">requirement_id FK</div><div class="field">version_no</div><div class="field">content_json</div><div class="field">change_summary</div></div></div>
+      <div class="entity orange"><div class="hd">prd</div><div class="bd"><div class="field">id PK</div><div class="field">requirement_id FK</div><div class="field">status</div><div class="field">version</div></div></div>
+      <div class="entity orange"><div class="hd">prd_section</div><div class="bd"><div class="field">id PK</div><div class="field">prd_id FK</div><div class="field">section_type</div><div class="field">content_markdown</div><div class="field">content_json</div></div></div>
+      <div class="entity orange"><div class="hd">prototype</div><div class="bd"><div class="field">id PK</div><div class="field">prd_id FK</div><div class="field">requirement_id FK</div><div class="field">html_content</div><div class="field">page_type</div></div></div>
+      <div class="entity purple"><div class="hd">ai_trace</div><div class="bd"><div class="field">id PK</div><div class="field">session_id FK</div><div class="field">business_object_type</div><div class="field">business_object_id</div><div class="field">ability_type</div></div></div>
+      <div class="entity purple"><div class="hd">ai_prompt_template</div><div class="bd"><div class="field">id PK</div><div class="field">ability_type</div><div class="field">system_prompt</div><div class="field">version</div><div class="field">status</div></div></div>
+      <div class="entity purple"><div class="hd">ai_skill_config</div><div class="bd"><div class="field">id PK</div><div class="field">ability_type</div><div class="field">model_config_id</div><div class="field">prompt_template_id</div><div class="field">enabled</div></div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>3. 数据产生顺序</h2>
+    <div class="sequence">
+      <div class="step" data-step="1"><strong>创建会话</strong><br>用户点击“新建需求对话”，创建 <code>conversation_session</code>，状态为 <code>empty</code>。</div>
+      <div class="step" data-step="2"><strong>保存用户消息</strong><br>每次用户输入先写入 <code>conversation_message</code>，保证原始上下文不丢失。</div>
+      <div class="step" data-step="3"><strong>AI路由识别</strong><br>后端调用 <code>intent_recognition</code> Skill，生成 <code>ai_trace</code>，输出意图和建议动作。</div>
+      <div class="step" data-step="4"><strong>AI需求抽取</strong><br>后端根据路由结果调用 <code>requirement_extract</code>，输出候选需求创建或更新patch。</div>
+      <div class="step" data-step="5"><strong>创建或更新候选需求</strong><br>系统创建/更新 <code>requirement_candidate</code>，并将本次变化写入 <code>requirement_candidate_patch</code>。</div>
+      <div class="step" data-step="6"><strong>完整度检查与追问</strong><br>调用 <code>completeness_check</code> 和 <code>reply_generate</code>，更新候选需求缺失项并生成AI回复消息。</div>
+      <div class="step" data-step="7"><strong>用户确认生成正式需求</strong><br>候选需求达到阈值后，用户确认产品线、模块、标题，系统创建 <code>requirement</code> 和 <code>requirement_version</code>。</div>
+      <div class="step" data-step="8"><strong>生成PRD</strong><br>从正式需求调用 <code>prd_generate</code>，创建 <code>prd</code> 与多个 <code>prd_section</code>。</div>
+      <div class="step" data-step="9"><strong>生成HTML原型</strong><br>从已确认PRD调用 <code>html_prototype_generate</code>，创建 <code>prototype</code> 和 <code>prototype_version</code>。</div>
+      <div class="step" data-step="10"><strong>进入查询与复用</strong><br>需求、PRD、原型、会话和Trace写入 <code>embedding_index</code>，支持关键词和语义查询。</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>4. 对话到需求卡片的影响关系</h2>
+    <table class="table">
+      <thead><tr><th>来源数据</th><th>影响对象</th><th>影响方式</th><th>是否直接覆盖</th><th>追溯方式</th></tr></thead>
+      <tbody>
+        <tr><td>conversation_message</td><td>requirement_candidate</td><td>AI抽取为结构化字段</td><td>否，生成patch后更新</td><td>source_message_id</td></tr>
+        <tr><td>ai_trace</td><td>requirement_candidate_patch</td><td>记录AI输出依据</td><td>否</td><td>ai_trace_id</td></tr>
+        <tr><td>requirement_candidate_patch</td><td>requirement_candidate.content_json</td><td>按patch合并字段</td><td>部分字段增量更新</td><td>candidate_id + patch历史</td></tr>
+        <tr><td>requirement_candidate</td><td>requirement</td><td>用户确认后生成正式需求</td><td>否，保留候选需求</td><td>source_candidate_id</td></tr>
+        <tr><td>requirement</td><td>requirement_version</td><td>每次确认修改生成版本</td><td>否，保留快照</td><td>requirement_id + version_no</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>5. 会话、需求、PRD、原型强绑定链路</h2>
+    <div class="flow">
+      <div class="node"><strong>conversation_session</strong><small>一次需求讨论上下文</small></div><div class="arrow">→</div>
+      <div class="node"><strong>conversation_message</strong><small>原始表达与AI追问</small></div><div class="arrow">→</div>
+      <div class="node green"><strong>requirement_candidate</strong><small>实时候选需求</small></div><div class="arrow">→</div>
+      <div class="node green"><strong>requirement</strong><small>正式需求卡片</small></div><div class="arrow">→</div>
+      <div class="node orange"><strong>prd</strong><small>结构化PRD</small></div><div class="arrow">→</div>
+      <div class="node orange"><strong>prototype</strong><small>HTML原型</small></div>
+    </div>
+    <p class="muted">查看任意一个正式需求时，必须能够反向追溯：来自哪个会话、哪条消息、哪个候选需求、哪些AI Trace、哪些人工确认动作。</p>
+  </section>
+
+  <section class="section">
+    <h2>6. 状态影响图</h2>
+    <div class="grid grid-3">
+      <div class="card"><h4>会话状态</h4><div class="code">empty
+  ↓ 用户发送消息
+collecting
+  ↓ 识别候选需求
+refining
+  ↓ 候选需求可生成
+candidate_ready
+  ↓ 生成正式需求
+card_generated
+  ↓ 关闭
+closed</div></div>
+      <div class="card"><h4>候选需求状态</h4><div class="code">draft
+  ↓ AI创建
+refining
+  ↓ 完整度达标
+ready_to_card
+  ↓ 用户确认
+confirmed
+  ↓ 转正式需求
+converted
+  ↓ 放弃
+closed</div></div>
+      <div class="card"><h4>正式需求状态</h4><div class="code">draft
+  ↓ 人工确认
+confirmed
+  ↓ 生成PRD
+prd_generated
+  ↓ 生成原型
+prototype_generated
+  ↓ 不再推进
+closed</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>7. AI调用对数据对象的影响矩阵</h2>
+    <div class="matrix">
+      <div class="head">AI能力</div><div class="head">会话</div><div class="head">候选需求</div><div class="head">正式需求</div><div class="head">PRD</div><div class="head">原型</div>
+      <div>intent_recognition</div><div class="yes">读取/更新阶段</div><div class="warn">读取</div><div class="no">不影响</div><div class="no">不影响</div><div class="no">不影响</div>
+      <div>requirement_extract</div><div class="yes">读取消息</div><div class="yes">创建/更新patch</div><div class="no">不直接影响</div><div class="no">不影响</div><div class="no">不影响</div>
+      <div>completeness_check</div><div class="warn">读取摘要</div><div class="yes">更新评分/缺失项</div><div class="warn">可用于检查</div><div class="no">不影响</div><div class="no">不影响</div>
+      <div>card_generate</div><div class="warn">读取来源</div><div class="yes">读取并标记converted</div><div class="yes">创建正式需求</div><div class="no">不影响</div><div class="no">不影响</div>
+      <div>prd_generate</div><div class="warn">读取摘要</div><div class="no">不影响</div><div class="yes">读取需求</div><div class="yes">创建PRD章节</div><div class="no">不影响</div>
+      <div>html_prototype_generate</div><div class="no">不影响</div><div class="no">不影响</div><div class="warn">读取需求</div><div class="yes">读取PRD</div><div class="yes">创建原型</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>8. AI Trace贯穿关系</h2>
+    <p class="muted">AI Trace不是业务结果本身，而是解释业务结果如何产生的证据链。所有AI调用必须写Trace。</p>
+    <div class="grid grid-2">
+      <div class="card"><h4>Trace写入时机</h4><ul><li>调用模型前生成trace_no。</li><li>记录输入上下文、模型配置、Prompt版本。</li><li>模型返回后记录输出、Token、耗时。</li><li>失败时记录error_code和error_message。</li><li>用户采纳或驳回时写入ai_action_feedback。</li></ul></div>
+      <div class="card"><h4>Trace反向追溯</h4><ul><li>候选需求字段来自哪个AI抽取结果。</li><li>完整度评分来自哪个Prompt版本。</li><li>PRD章节由哪个模型生成。</li><li>HTML原型由哪个Prompt和PRD章节生成。</li><li>AI输出是否被用户采纳。</li></ul></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>9. 查询与语义索引影响关系</h2>
+    <div class="flow">
+      <div class="node green"><strong>requirement</strong><small>标题、结构化描述、规则</small></div><div class="arrow">→</div>
+      <div class="node orange"><strong>prd_section</strong><small>章节Markdown和结构化JSON</small></div><div class="arrow">→</div>
+      <div class="node orange"><strong>prototype</strong><small>页面说明和HTML摘要</small></div><div class="arrow">→</div>
+      <div class="node purple"><strong>embedding_index</strong><small>对象分块、向量、元数据</small></div><div class="arrow">→</div>
+      <div class="node"><strong>查询中心</strong><small>关键词检索 + 语义召回 + 权限过滤</small></div>
+    </div>
+    <table class="table">
+      <thead><tr><th>对象</th><th>索引内容</th><th>重建触发</th></tr></thead>
+      <tbody>
+        <tr><td>requirement</td><td>标题、业务目标、角色、规则、字段、权限、验收标准</td><td>需求保存版本后</td></tr>
+        <tr><td>prd_section</td><td>章节标题、Markdown、结构化JSON摘要</td><td>章节保存或PRD确认后</td></tr>
+        <tr><td>prototype</td><td>页面名称、页面类型、页面说明、HTML摘要</td><td>原型保存版本后</td></tr>
+        <tr><td>conversation_session</td><td>会话摘要、候选需求摘要</td><td>会话摘要更新后</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>10. MVP中的数据写入边界</h2>
+    <div class="grid grid-2">
+      <div class="card"><h4>AI可以做什么</h4><ul><li>识别意图。</li><li>抽取需求字段。</li><li>判断是否拆分。</li><li>生成候选需求patch。</li><li>检查完整度。</li><li>生成追问问题。</li><li>生成PRD和HTML草稿。</li></ul></div>
+      <div class="card"><h4>后端必须做什么</h4><ul><li>保存原始消息。</li><li>校验AI输出JSON。</li><li>决定是否执行nextActions。</li><li>写入候选需求和patch。</li><li>生成正式需求编号。</li><li>控制状态流转。</li><li>写入Trace和版本。</li></ul></div>
+    </div>
+    <p class="muted">MVP不建议让大模型通过MCP直接写数据库。后续可以将固定业务接口封装为MCP工具，但仍不暴露通用SQL。</p>
+  </section>
+</div>
+</body>
+</html>
