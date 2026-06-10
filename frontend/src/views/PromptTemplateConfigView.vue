@@ -55,6 +55,7 @@ async function load() {
 }
 
 function preferredPrompt() {
+  // 默认打开 AI Router 模板，便于排查“用户消息是否先经过 intent_router”这一核心链路。
   return prompts.value.find((prompt) => prompt.templateCode === 'default_intent_router')
     || prompts.value.find((prompt) => prompt.abilityType === 'intent_router')
     || prompts.value[0];

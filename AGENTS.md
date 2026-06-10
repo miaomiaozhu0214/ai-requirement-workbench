@@ -55,6 +55,18 @@ MVP核心链路：
 - 前端构建必须执行源码清洁检查，确保 frontend/src 下不存在 .js 或 .js.map 编译产物。
 - Trace 页面验收必须同时验证 API 和 UI：API 返回完整字段，UI 能显示 intent_router、requirement_extract、completeness_check、reply_generate、card_generate 的调用记录。
 
+## 中文注释规范
+
+本项目面向内部产品、研发、测试协作，核心业务代码需要具备中文注释。
+
+注释原则：
+
+- 不为显而易见的代码添加废话注释。
+- 重点为 AI Router、AI Orchestrator、Prompt选择、上下文组装、候选需求状态流转、正式需求生成、AI Trace、真实LLM/Mock切换、数据库写入边界等核心逻辑补充中文说明。
+- 注释应说明“为什么这样设计”和“业务含义”，不要简单重复代码。
+- 大模型不得直接写数据库，后端负责校验、状态控制、Trace记录和持久化，该边界必须在相关代码中保留注释。
+- 前端关键交互流程，如消息发送、候选需求刷新、生成正式需求卡片、Trace展示，也应保留必要中文注释。
+
 ## 实现顺序
 
 按以下顺序实现，不要跳步：

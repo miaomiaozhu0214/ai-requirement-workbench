@@ -25,6 +25,7 @@ async function initialize() {
   try {
     await store.loadSessions();
     if (store.sessions.length === 0) {
+      // 首次进入自动创建会话，让用户可以直接输入需求，不需要先理解系统状态。
       await store.createSession();
     }
   } catch (error) {
@@ -53,6 +54,7 @@ async function selectSession(id: number) {
 
 async function sendMessage(content: string) {
   try {
+    // 后端返回的是完整会话详情，包含消息、候选需求、正式需求和本轮 AI Trace 动作。
     await store.sendMessage(content);
   } catch (error) {
     ui.toast('发送失败', error instanceof Error ? error.message : 'AI服务暂时不可用，请稍后重试', 'error');
@@ -92,6 +94,7 @@ function openGenerateDialog(candidate: Candidate) {
 async function handleGenerated() {
   generating.value = false;
   selectedCandidate.value = null;
+  // 正式需求生成后刷新当前会话和需求池，确保右侧候选状态与需求池入库结果一致。
   if (store.activeSession) await store.selectSession(store.activeSession.id);
   await store.refreshRequirements();
 }

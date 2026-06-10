@@ -43,6 +43,7 @@ public class AiTraceService {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public AiTrace recordSuccess(Long sessionId, String objectType, Long objectId, String abilityType, Object input, Object output, Long userId, long startedAt, AiCallMetadata metadata) {
+    // Trace 使用独立事务保存，确保外层候选需求写入失败时也能看到本次 AI 调用的输入输出。
     AiTrace trace = baseTrace(sessionId, objectType, objectId, abilityType, input, userId, startedAt);
     applyMetadata(trace, metadata);
     trace.setOutputJson(asMap(output));
@@ -58,6 +59,7 @@ public class AiTraceService {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public AiTrace recordFailure(Long sessionId, String objectType, Long objectId, String abilityType, Object input, Exception exception, Long userId, long startedAt, AiCallMetadata metadata) {
+    // 真实 LLM、Prompt、Schema 任一环节失败都要落 Trace，页面才能给出可排查的错误信息。
     AiTrace trace = baseTrace(sessionId, objectType, objectId, abilityType, input, userId, startedAt);
     applyMetadata(trace, metadata);
     trace.setStatus("failed");
@@ -69,6 +71,7 @@ public class AiTraceService {
   }
 
   public List<AiTraceDto> listLatest(Long sessionId) {
+    // Trace 列表支持两种入口：全局最近调用，或从某个会话进入时只看该会话的调用链。
     List<AiTrace> traces = sessionId == null
         ? aiTraceRepository.findTop50ByOrderByCreatedAtDesc()
         : aiTraceRepository.findBySessionIdOrderByCreatedAtDesc(sessionId);
@@ -123,6 +126,7 @@ public class AiTraceService {
       trace.setDurationMs(metadata.durationMs());
     }
     if (metadata.renderedPrompt() != null) {
+      // 渲染后的 Prompt 放在 inputJson，方便排查模板变量替换是否正确，但不改变 AI 输出结构。
       Map<String, Object> inputJson = trace.getInputJson() == null ? new java.util.LinkedHashMap<>() : new java.util.LinkedHashMap<>(trace.getInputJson());
       inputJson.put("renderedPrompt", metadata.renderedPrompt());
       trace.setInputJson(inputJson);
@@ -165,6 +169,7 @@ public class AiTraceService {
   }
 
   private String summarizeInput(Map<String, Object> inputJson) {
+    // 前端列表只展示摘要；完整输入仍保留在 inputJson 里，供详情弹层排查。
     if (inputJson == null || inputJson.isEmpty()) {
       return "";
     }
@@ -216,6 +221,7 @@ public class AiTraceService {
     if (value == null) {
       return 0;
     }
+    // 某些 Mock 或失败响应拿不到真实 token，用粗略估算保留字段可见性。
     return Math.max(1, value.toString().length() / 4);
   }
 }

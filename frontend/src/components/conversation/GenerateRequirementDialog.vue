@@ -77,6 +77,7 @@ async function submit() {
   }
   submitting.value = true;
   try {
+    // 这里是“用户确认生成正式需求”的前端边界；后端会保留来源候选和来源会话。
     const requirement = await candidateApi.generateCard(props.candidate.id, { ...form, title: form.title.trim() });
     ui.toast('需求卡片已生成', `${requirement.requirementNo} 已保存到需求池`, 'success');
     emit('generated', requirement);

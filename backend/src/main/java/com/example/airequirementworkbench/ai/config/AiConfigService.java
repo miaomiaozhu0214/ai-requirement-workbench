@@ -58,6 +58,7 @@ public class AiConfigService {
   public AiConfigStatusDto getStatus() {
     String provider = aiProvider == null || aiProvider.isBlank() ? "openai" : aiProvider.trim().toLowerCase();
     if ("mock".equals(provider)) {
+      // Mock 必须显式配置才会进入；默认 openai，用于避免验收时静默降级为假数据。
       return new AiConfigStatusDto("mock", "Mock", false, false, false, 0, null, List.of());
     }
 
@@ -84,6 +85,7 @@ public class AiConfigService {
 
     List<String> requiredAbilities = List.of("intent_router", "requirement_extract", "completeness_check", "reply_generate");
     for (String abilityType : requiredAbilities) {
+      // 配置状态不仅检查模型和 Key，还要检查对话主链路必须依赖的能力是否启用并绑定 Prompt。
       AiAbilityConfig ability = abilityRepository.findByAbilityTypeAndDeletedFalse(abilityType).orElse(null);
       if (ability == null || !Boolean.TRUE.equals(ability.getEnabled()) || !"enabled".equals(ability.getStatus())) {
         missing.add(abilityType + " 能力未启用");
@@ -219,6 +221,7 @@ public class AiConfigService {
       return null;
     }
     if (value.startsWith("sk-")) {
+      // 列表接口只展示掩码，避免管理页刷新时把真实 Key 明文回显到前端。
       return "sk-********";
     }
     return value;

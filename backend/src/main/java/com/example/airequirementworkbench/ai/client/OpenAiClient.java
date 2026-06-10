@@ -121,6 +121,10 @@ public class OpenAiClient implements AiClient {
 
   private <T> T invoke(String abilityType, Map<String, Object> input, Class<T> resultType) {
     long startedAt = System.currentTimeMillis();
+    /*
+     * 每个能力调用都从 ai_ability_config 解析模型和 Prompt。
+     * 这样 Router、抽取、完整度检查、回复生成可以独立换模板/模型，而 Orchestrator 的业务编排不需要跟着改。
+     */
     AiAbilityConfig ability = abilityRepository.findByAbilityTypeAndDeletedFalse(abilityType)
         .filter(item -> Boolean.TRUE.equals(item.getEnabled()) && "enabled".equals(item.getStatus()))
         .orElseThrow(() -> new BusinessException("AI_ABILITY_DISABLED", abilityType + " AI能力未启用"));
@@ -160,6 +164,7 @@ public class OpenAiClient implements AiClient {
 
       JsonNode outputJson = objectMapper.readTree(outputText);
       try {
+        // 真实 LLM 必须先通过 JSON Schema 校验，后端才允许把结构化结果交给 Orchestrator 写库。
         jsonSchemaValidator.validate(prompt.getJsonSchema(), outputJson);
       } catch (IllegalArgumentException exception) {
         AiCallMetadata metadata = withOutput(baseMetadata, outputText, startedAt, readUsage(responseJson, "input_tokens"), readUsage(responseJson, "output_tokens"));
@@ -199,6 +204,7 @@ public class OpenAiClient implements AiClient {
   }
 
   private PromptTemplate resolvePrompt(AiAbilityConfig ability, String abilityType) {
+    // 能力显式绑定的 Prompt 优先；未绑定时才取同 ability_type 下启用的默认/最新模板。
     if (ability.getPromptTemplateId() != null) {
       return promptRepository.findById(ability.getPromptTemplateId())
           .filter(item -> !Boolean.TRUE.equals(item.getDeleted()) && "enabled".equals(item.getStatus()))
@@ -257,6 +263,7 @@ public class OpenAiClient implements AiClient {
   }
 
   private String resolveApiKey(AiModelConfig model) {
+    // 管理页直接保存的 Key 优先；为空时再按 apiKeyEnv 去读取环境变量，兼容本地和部署两种方式。
     if (model.getApiKeySecret() != null && !model.getApiKeySecret().isBlank()) {
       return model.getApiKeySecret().trim();
     }

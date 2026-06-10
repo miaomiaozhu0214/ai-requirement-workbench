@@ -36,6 +36,7 @@ public class MockAiClient implements AiClient {
 
   @Override
   public RouteResult route(RouteContext context) {
+    // Mock 只在显式 AI_PROVIDER=mock 时启用，用来稳定跑通本地流程；真实验收仍以 OpenAiClient 为准。
     markCall("intent_router");
     String latestMessage = context.latestMessage();
     if (isUnclear(latestMessage)) {
@@ -260,6 +261,7 @@ public class MockAiClient implements AiClient {
   }
 
   private void markCall(String abilityType) {
+    // Mock 也尽量关联默认 Prompt 版本，保证 Trace 页面能按同一字段展示模型、模板和版本。
     Optional<PromptTemplate> prompt = promptTemplateRepository.findFirstByAbilityTypeAndStatusAndDeletedFalseOrderByIsDefaultDescUpdatedAtDesc(abilityType, "enabled");
     lastMetadata.set(prompt
         .map(template -> new AiCallMetadata(null, "mock-requirement-model", template.getId(), template.getVersion(), null, null, null, null, null))

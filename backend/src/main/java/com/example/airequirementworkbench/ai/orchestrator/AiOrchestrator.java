@@ -65,6 +65,11 @@ public class AiOrchestrator {
 
   public OrchestrationResult processUserMessage(ConversationSession session, ConversationMessage userMessage, Long userId) {
     List<RequirementCandidate> candidates = candidateRepository.findBySessionIdAndDeletedFalseOrderByUpdatedAtDesc(session.getId());
+    /*
+     * 所有用户消息都必须先进入 intent_router。
+     * Router 只判断意图和建议动作，不能直接创建候选需求或正式需求；这样可以把“模型判断”和“后端写库”
+     * 明确分开，避免大模型输出绕过状态校验、Trace记录和会话绑定。
+     */
     RouteContext routeContext = new RouteContext(
         userMessage.getContent(),
         session.getStatus(),
@@ -81,6 +86,7 @@ public class AiOrchestrator {
     OrchestrationContext context = new OrchestrationContext(session, userMessage, userId, route, candidates);
 
     if (isLowConfidence(route)) {
+      // 低置信度时不执行写入类动作，先让用户确认，降低误建候选需求或误生成卡片的风险。
       context.addSystemNote("Router 置信度较低，已跳过写入类动作，改为向用户确认。");
       handleReply(context);
       return new OrchestrationResult(context.assistantReply(), routeCall.trace().getId());
@@ -91,6 +97,7 @@ public class AiOrchestrator {
       actions = List.of("generate_reply");
     }
     if (isStructurallyUnclear(userMessage.getContent())) {
+      // “1”、纯数字、纯符号这类输入必须保留 Router Trace，但不能直接驱动需求抽取写库。
       context.addSystemNote("用户输入过短或缺少业务语义，已跳过写入类动作。");
       actions = actions.stream()
           .filter(action -> !isWriteAction(action))
@@ -119,6 +126,7 @@ public class AiOrchestrator {
 
   private Map<String, AiActionHandler> buildActionRegistry() {
     Map<String, AiActionHandler> registry = new HashMap<>();
+    // Registry 把 Router 建议动作映射到后端可控能力，便于集中校验动作是否允许执行。
     registry.put("extract_requirement", this::handleExtract);
     registry.put("extract_requirement_info", this::handleExtract);
     registry.put("split_requirement", this::handleSplit);
@@ -238,6 +246,7 @@ public class AiOrchestrator {
       return false;
     }
     if (List.of("generate_requirement_card", "generate_card", "card_generate").contains(action)) {
+      // 生成正式卡片是强写入前置动作：必须已有候选需求，且 Router 置信度足够高。
       if (editableCandidates(context.session().getId()).isEmpty()) {
         context.addSystemNote("当前没有候选需求，不能直接生成需求卡片。");
         return false;
@@ -281,6 +290,7 @@ public class AiOrchestrator {
 
   private List<Map<String, Object>> recentMessageSnapshots(Long sessionId) {
     List<ConversationMessage> messages = messageRepository.findBySessionIdAndDeletedFalseOrderByCreatedAtAsc(sessionId);
+    // Router 需要理解多轮上下文，但只取最近 10 条，避免 Prompt 过长并降低无关历史干扰。
     return messages.stream()
         .skip(Math.max(0, messages.size() - 10))
         .map(message -> {
@@ -318,6 +328,7 @@ public class AiOrchestrator {
       List<RequirementCandidate> candidates,
       CandidatePatch patch
   ) {
+    // 候选需求与会话强绑定：同一会话内标题相同且未关闭/未转正时做增量合并，否则新建候选。
     return candidates.stream()
         .filter(candidate -> candidate.getTitle().equals(patch.title()))
         .filter(this::isEditableCandidate)
@@ -350,6 +361,7 @@ public class AiOrchestrator {
       }
       after.put("title", patch.title());
 
+      // 大模型只产出 patch，真正的 JSON 合并、状态流转和持久化由后端完成，保证可审计、可回滚。
       candidate.setTitle(patch.title());
       candidate.setContentJson(after);
       candidate.setConfidence(patch.confidence());
@@ -378,6 +390,7 @@ public class AiOrchestrator {
       Map<String, Object> before,
       Map<String, Object> after
   ) {
+    // patch 表保存本轮 AI 修改前后快照，并关联 Trace，方便测试和产品复盘多轮补充是如何合并的。
     RequirementCandidatePatch candidatePatch = new RequirementCandidatePatch();
     candidatePatch.setId(idGenerator.nextId());
     candidatePatch.setCandidateId(candidate.getId());
@@ -402,6 +415,7 @@ public class AiOrchestrator {
     List<RequirementCandidate> touchedReady = context.touchedCandidates().stream()
         .filter(this::isEditableCandidate)
         .toList();
+    // 优先选择本轮刚更新的候选，避免用户补充后生成了其他历史候选的卡片。
     if (!touchedReady.isEmpty()) {
       return touchedReady.get(0);
     }
@@ -438,6 +452,10 @@ public class AiOrchestrator {
       Long userId,
       Supplier<T> supplier
   ) {
+    /*
+     * AI 调用统一从这里记录 Trace。成功和失败都落库，且失败使用独立事务写入，
+     * 避免外层业务回滚时丢失排查真实 LLM、Prompt 或 JSON Schema 问题所需的证据。
+     */
     long started = System.currentTimeMillis();
     try {
       T output = supplier.get();

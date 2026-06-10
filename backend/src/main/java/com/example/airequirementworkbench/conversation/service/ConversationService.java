@@ -102,6 +102,7 @@ public class ConversationService {
   @Transactional
   public void deleteSession(Long id) {
     ConversationSession session = findSession(id);
+    // 会话删除采用软删除：对话和候选从列表隐藏，但正式需求和 AI Trace 保留用于追溯。
     session.setDeleted(true);
     session.setStatus("deleted");
     session.setCurrentStage("closed");
@@ -128,6 +129,7 @@ public class ConversationService {
     }
 
     String content = request.content().trim();
+    // 用户消息先落库，再交给 Orchestrator；这样 Router 和后续能力都能拿到完整会话上下文。
     ConversationMessage userMessage = new ConversationMessage();
     userMessage.setId(idGenerator.nextId());
     userMessage.setSessionId(sessionId);
@@ -146,6 +148,7 @@ public class ConversationService {
     session.setUpdatedBy(mockUserId);
     sessionRepository.save(session);
 
+    // Orchestrator 内部固定先调用 intent_router，再根据 Router 结果决定是否抽取、检查完整度或生成回复。
     String assistantReply = aiOrchestrator.processUserMessage(session, userMessage, mockUserId).assistantReply();
     ConversationMessage assistantMessage = new ConversationMessage();
     assistantMessage.setId(idGenerator.nextId());

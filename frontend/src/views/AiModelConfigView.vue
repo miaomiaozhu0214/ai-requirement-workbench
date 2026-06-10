@@ -65,6 +65,7 @@ function validate() {
   if (!form.displayName.trim()) errors.displayName = '显示名称不能为空';
   if (!form.modelName.trim()) errors.modelName = '模型名称不能为空';
   if (!form.apiBaseUrl.trim() || !/^https?:\/\//.test(form.apiBaseUrl)) errors.apiBaseUrl = '请输入合法的 API Base URL';
+  // 真实 LLM 默认启用：可以直接保存 Key，也可以填写部署环境中可读取的环境变量名。
   if (!form.apiKeySecret?.trim() && !form.apiKeyEnv.trim()) errors.apiKeySecret = '请填写真实 API Key，或填写环境变量名';
   if (form.temperature < 0 || form.temperature > 2) errors.temperature = '温度范围为 0-2';
   if (form.maxOutputTokens < 128 || form.maxOutputTokens > 16000) errors.maxOutputTokens = '输出 Token 范围为 128-16000';

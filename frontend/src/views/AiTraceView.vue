@@ -9,6 +9,7 @@ const loading = ref(false);
 const errorMessage = ref('');
 
 function traceKey(trace: AiTrace) {
+  // 兼容会话详情里的 traceId 和 Trace 列表里的 id，避免长整型字段映射差异导致行选择失效。
   return trace.traceId ?? trace.id;
 }
 
@@ -40,6 +41,7 @@ function formatJson(value: unknown) {
 }
 
 function promptLabel(trace: AiTrace) {
+  // 列表优先展示模板编码，方便快速确认是否命中了 default_intent_router 等关键 Prompt。
   const name = trace.promptTemplateCode || trace.promptTemplateName || '未绑定Prompt';
   return `${name}${trace.promptVersion ? ` · ${trace.promptVersion}` : ''}`;
 }

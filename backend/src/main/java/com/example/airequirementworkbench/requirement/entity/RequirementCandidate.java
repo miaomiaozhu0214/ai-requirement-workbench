@@ -18,13 +18,16 @@ import org.hibernate.type.SqlTypes;
 public class RequirementCandidate {
   @Id
   private Long id;
+  // 候选需求必须归属于一个会话，多轮补充和 Trace 排查都依赖这个绑定关系。
   private Long sessionId;
   private String title;
   private String status = "draft";
+  // 结构化需求内容使用 jsonb 保存，便于 AI patch 增量合并不同业务字段。
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")
   private Map<String, Object> contentJson = Map.of();
   private BigDecimal completenessScore = BigDecimal.ZERO;
+  // 完整度检查输出的缺失项、风险项、建议问题直接支撑右侧候选卡片展示。
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")
   private List<String> missingItemsJson;

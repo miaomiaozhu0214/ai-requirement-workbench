@@ -86,6 +86,10 @@ public class RequirementService {
       throw new BusinessException("CANDIDATE_CONVERTED", "该候选需求已生成正式需求");
     }
 
+    /*
+     * 正式需求必须由用户确认后从候选需求生成。
+     * 这里保留 sourceSessionId/sourceCandidateId，确保需求池里的卡片能追溯到原始会话和候选需求。
+     */
     Requirement requirement = new Requirement();
     requirement.setId(idGenerator.nextId());
     requirement.setRequirementNo(idGenerator.nextRequirementNo());
@@ -104,6 +108,7 @@ public class RequirementService {
     requirement.setUpdatedBy(mockUserId);
     requirement = requirementRepository.save(requirement);
 
+    // 生成首个版本快照，后续编辑 PRD 或需求内容时可以基于版本表追踪变化。
     RequirementVersion version = new RequirementVersion();
     version.setId(idGenerator.nextId());
     version.setRequirementId(requirement.getId());
@@ -114,6 +119,7 @@ public class RequirementService {
     version.setCreatedBy(mockUserId);
     versionRepository.save(version);
 
+    // 候选转正后不再参与后续合并，避免同一候选重复生成正式需求。
     candidate.setStatus("converted");
     candidate.setConvertedRequirementId(requirement.getId());
     candidate.setUpdatedBy(mockUserId);

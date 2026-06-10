@@ -11,6 +11,7 @@ function walk(dir) {
       walk(fullPath);
       continue;
     }
+    // frontend/src 只能保留 TypeScript/Vue 源码，避免 Vite 命中过期 .js 而不是当前 .ts/.vue。
     if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.js.map'))) {
       offenders.push(relative(new URL('..', import.meta.url).pathname, fullPath));
     }

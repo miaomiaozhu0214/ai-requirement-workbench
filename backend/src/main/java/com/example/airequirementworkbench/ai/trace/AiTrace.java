@@ -24,9 +24,11 @@ public class AiTrace {
   private String modelName;
   private Long promptTemplateId;
   private String promptVersion;
+  // 保存 Router/能力调用的输入上下文，包括用户输入、候选快照、最近消息和渲染后的 Prompt。
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")
   private Map<String, Object> inputJson;
+  // 保存模型返回并通过 Schema 校验后的结构化 JSON，Trace 页面直接基于该字段展示能力结果。
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")
   private Map<String, Object> outputJson;
