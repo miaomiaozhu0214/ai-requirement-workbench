@@ -55,6 +55,10 @@ MVP核心链路：
 - 前端构建必须执行源码清洁检查，确保 frontend/src 下不存在 .js 或 .js.map 编译产物。
 - Trace 页面验收必须同时验证 API 和 UI：API 返回完整字段，UI 能显示 intent_router、requirement_extract、completeness_check、reply_generate、card_generate 的调用记录。
 
+数据库迁移规则：
+- 已经执行过并提交的 Flyway migration 文件 V*_*.sql 禁止修改，包括注释、空行、格式化调整。
+- 如需调整表结构、初始化数据或补充说明，必须新增下一个版本号的 migration 文件，例如 V7__xxx.sql。
+
 ## 中文注释规范
 
 本项目面向内部产品、研发、测试协作，核心业务代码需要具备中文注释。

@@ -1,5 +1,5 @@
--- 可重复执行的基础 Prompt 初始化。
--- 这些 INSERT 都只在模板不存在时补齐，避免覆盖管理端已经调整过的 Prompt 内容和版本。
+-- Idempotent baseline prompt initialization. These inserts are deliberately
+-- "missing only" so templates edited from the management pages are not reset.
 
 INSERT INTO prompt_template (
   id, ability_type, template_code, template_name, version, system_prompt, user_prompt, json_schema,
@@ -121,7 +121,6 @@ WHERE template_code IN (
   AND deleted = FALSE
   AND (status <> 'enabled' OR is_default IS DISTINCT FROM TRUE);
 
--- 对话主链路依赖这些能力绑定：Router 先判断意图，再由后端编排抽取、完整度检查、回复和卡片生成。
 INSERT INTO ai_ability_config (
   id, ability_type, ability_name, enabled, model_config_id, prompt_template_id,
   fallback_to_mock, status, created_by, updated_by
