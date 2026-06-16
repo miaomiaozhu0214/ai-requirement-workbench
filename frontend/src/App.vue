@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Activity, FileText, FolderTree, MessageSquareText, PanelsTopLeft, Settings, SlidersHorizontal } from '@lucide/vue';
+import { Activity, FileText, FolderTree, MessageSquareText, PanelsTopLeft, Settings, SlidersHorizontal, Tags } from '@lucide/vue';
 import ToastHost from './components/common/ToastHost.vue';
 </script>
 
@@ -25,6 +25,10 @@ import ToastHost from './components/common/ToastHost.vue';
         <RouterLink to="/feature-library">
           <FolderTree :size="18" />
           全量功能库
+        </RouterLink>
+        <RouterLink to="/product-lines">
+          <Tags :size="18" />
+          产品线配置
         </RouterLink>
         <RouterLink to="/ai/models">
           <Settings :size="18" />

@@ -48,10 +48,32 @@ export interface ConversationDetail {
   aiActions: AiAction[];
 }
 
+export type ProductLineType = 'face_to_customer' | 'internal' | 'public_service' | 'design_spec';
+export type ProductLinePlatform =
+  | 'yunlian_front'
+  | 'yunzu_front'
+  | 'yunzu_app'
+  | 'middle_platform'
+  | 'yunlian_back'
+  | 'yunzu_back'
+  | 'lianxin'
+  | 'lianxin_app';
+
 export interface ProductLine {
   id: number;
-  lineCode: string;
+  lineCode?: string;
   lineName: string;
+  owners: string[];
+  productType: ProductLineType;
+  platforms: ProductLinePlatform[];
+  description?: string;
+  version: number;
+  isProcessing: boolean;
+  featureCount: number;
+  canEdit: boolean;
+  canDelete: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductModule {

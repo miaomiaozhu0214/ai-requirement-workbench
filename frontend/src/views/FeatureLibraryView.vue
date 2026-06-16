@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { ArrowDown, ArrowUp, Edit3, FolderPlus, Plus, RefreshCcw, Search, Trash2 } from '@lucide/vue';
 import BaseModal from '../components/common/BaseModal.vue';
 import { featureLibraryApi } from '../api/featureLibraryApi';
-import { masterDataApi } from '../api/masterDataApi';
+import { productLineApi } from '../api/productLineApi';
 import { useUiStore } from '../stores/ui';
 import type {
   FeatureContentBlock,
@@ -115,7 +115,7 @@ const parentOptions = computed(() => {
 
 async function loadProductLines() {
   try {
-    productLines.value = await masterDataApi.productLines();
+    productLines.value = await productLineApi.list();
     if (!selectedProductLineId.value && productLines.value.length > 0) {
       selectedProductLineId.value = productLines.value[0].id;
     }
@@ -409,6 +409,7 @@ onMounted(loadProductLines);
         <div class="field">
           <label>产品线</label>
           <select v-model.number="selectedProductLineId" class="select" @change="loadTree">
+            <option v-if="productLines.length === 0" :value="null">暂无产品线</option>
             <option v-for="line in productLines" :key="line.id" :value="line.id">{{ line.lineName }}</option>
           </select>
         </div>
@@ -437,7 +438,8 @@ onMounted(loadProductLines);
           <button class="btn small" type="button" :disabled="!selectedProductLineId" @click="openCreateNode()">新增根节点</button>
         </div>
         <div class="panel-body tree-body">
-          <div v-if="loading" class="empty">正在加载功能树...</div>
+          <div v-if="productLines.length === 0" class="empty">暂无产品线，请先在“产品线配置”中新增产品线。</div>
+          <div v-else-if="loading" class="empty">正在加载功能树...</div>
           <div v-else-if="flatRows.length === 0" class="empty">暂无功能节点。可以先新增一个根模块。</div>
           <div v-else class="tree-list">
             <article

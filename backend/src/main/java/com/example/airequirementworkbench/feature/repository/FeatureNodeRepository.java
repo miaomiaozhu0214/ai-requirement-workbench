@@ -13,6 +13,8 @@ public interface FeatureNodeRepository extends JpaRepository<FeatureNode, Long> 
 
   List<FeatureNode> findByProductLineIdAndDeletedFalseAndParentIdIsNullOrderBySortOrderAscCreatedAtAsc(Long productLineId);
 
+  long countByProductLineIdAndDeletedFalse(Long productLineId);
+
   @Query("""
       select n from FeatureNode n
       where n.productLineId = :productLineId

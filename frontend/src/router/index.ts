@@ -5,6 +5,7 @@ import AiTraceView from '../views/AiTraceView.vue';
 import ConversationWorkbench from '../views/ConversationWorkbench.vue';
 import FeatureLibraryView from '../views/FeatureLibraryView.vue';
 import PromptTemplateConfigView from '../views/PromptTemplateConfigView.vue';
+import ProductLineConfigView from '../views/ProductLineConfigView.vue';
 import RequirementPool from '../views/RequirementPool.vue';
 
 const router = createRouter({
@@ -14,6 +15,7 @@ const router = createRouter({
     { path: '/conversation', component: ConversationWorkbench },
     { path: '/requirements', component: RequirementPool },
     { path: '/feature-library', component: FeatureLibraryView },
+    { path: '/product-lines', component: ProductLineConfigView },
     { path: '/ai/models', component: AiModelConfigView },
     { path: '/ai/prompts', component: PromptTemplateConfigView },
     { path: '/ai/abilities', component: AiAbilityConfigView },
