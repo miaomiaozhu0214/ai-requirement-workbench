@@ -26,6 +26,7 @@ function blankAbility(): AiAbilityConfig {
     modelConfigId: null,
     promptTemplateId: null,
     fallbackToMock: false,
+    executionOrder: 100,
     status: 'enabled',
   };
 }
@@ -68,6 +69,7 @@ function validate() {
   if (!form.abilityName.trim()) errors.abilityName = '能力名称不能为空';
   if (!form.modelConfigId) errors.modelConfigId = '请选择模型配置';
   if (!form.promptTemplateId) errors.promptTemplateId = '请选择 Prompt 模板';
+  if (form.executionOrder == null || form.executionOrder < 0 || form.executionOrder > 9999) errors.executionOrder = '执行顺序需为0-9999';
   return Object.keys(errors).length === 0;
 }
 
@@ -134,7 +136,7 @@ onMounted(load);
         >
           <strong>{{ ability.abilityName }}</strong>
           <span>{{ ability.abilityType }}</span>
-          <span>{{ ability.enabled ? '启用' : '停用' }} · {{ modelName(ability.modelConfigId) }}</span>
+          <span>顺序 {{ ability.executionOrder ?? 100 }} · {{ ability.enabled ? '启用' : '停用' }} · {{ modelName(ability.modelConfigId) }}</span>
         </button>
         <div v-if="abilities.length === 0" class="empty">暂无能力配置。</div>
       </div>
@@ -152,6 +154,9 @@ onMounted(load);
         </button>
       </div>
       <div class="panel-body grid-form">
+        <div class="form-tip">
+          数值越小越先执行；顺序相同时，按照 AI Router 返回的原始顺序执行。
+        </div>
         <div class="field">
           <label>能力类型 *</label>
           <input v-model="form.abilityType" class="input" maxlength="64" />
@@ -183,6 +188,11 @@ onMounted(load);
           <div class="field-error">{{ errors.promptTemplateId }}</div>
         </div>
         <div class="field">
+          <label>执行顺序 *</label>
+          <input v-model.number="form.executionOrder" class="input" type="number" min="0" max="9999" />
+          <div class="field-error">{{ errors.executionOrder }}</div>
+        </div>
+        <div class="field">
           <label>状态</label>
           <select v-model="form.status" class="select">
             <option value="enabled">enabled</option>
@@ -212,6 +222,7 @@ onMounted(load);
 .config-row strong { font-size: 13px; }
 .config-row span { color: var(--muted); font-size: 12px; }
 .config-row.active { border-color: var(--primary); background: var(--soft-blue); }
+.form-tip { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 8px; background: var(--soft-blue); color: #1d4ed8; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
 .check-line { display: flex; align-items: center; gap: 8px; min-height: 40px; font-weight: 650; }
 @media (max-width: 1100px) { .ability-layout { grid-template-columns: 1fr; } }
 </style>

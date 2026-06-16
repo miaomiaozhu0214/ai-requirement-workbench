@@ -195,9 +195,20 @@ public class AiConfigService {
     ability.setModelConfigId(request.modelConfigId());
     ability.setPromptTemplateId(request.promptTemplateId());
     ability.setFallbackToMock(Boolean.TRUE.equals(request.fallbackToMock()));
+    ability.setExecutionOrder(resolveExecutionOrder(request.executionOrder()));
     ability.setStatus(request.status());
     ability.setUpdatedBy(mockUserId);
     return toAbilityDto(abilityRepository.save(ability));
+  }
+
+  private Integer resolveExecutionOrder(Integer executionOrder) {
+    if (executionOrder == null) {
+      return 100;
+    }
+    if (executionOrder < 0 || executionOrder > 9999) {
+      throw new BusinessException("ABILITY_EXECUTION_ORDER_INVALID", "执行顺序需在0-9999之间");
+    }
+    return executionOrder;
   }
 
   private void validateSchema(Object schema) {
@@ -250,7 +261,7 @@ public class AiConfigService {
     return new AbilityConfigDto(
         ability.getId(), ability.getAbilityType(), ability.getAbilityName(), ability.getEnabled(),
         ability.getModelConfigId(), ability.getPromptTemplateId(), ability.getFallbackToMock(),
-        ability.getStatus(), ability.getUpdatedAt()
+        ability.getExecutionOrder() == null ? 100 : ability.getExecutionOrder(), ability.getStatus(), ability.getUpdatedAt()
     );
   }
 }

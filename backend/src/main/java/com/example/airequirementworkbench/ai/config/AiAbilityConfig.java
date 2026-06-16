@@ -18,6 +18,7 @@ public class AiAbilityConfig {
   private Long modelConfigId;
   private Long promptTemplateId;
   private Boolean fallbackToMock = false;
+  private Integer executionOrder = 100;
   private String status = "enabled";
   private Long createdBy;
   private LocalDateTime createdAt;
@@ -51,6 +52,8 @@ public class AiAbilityConfig {
   public void setPromptTemplateId(Long promptTemplateId) { this.promptTemplateId = promptTemplateId; }
   public Boolean getFallbackToMock() { return fallbackToMock; }
   public void setFallbackToMock(Boolean fallbackToMock) { this.fallbackToMock = fallbackToMock; }
+  public Integer getExecutionOrder() { return executionOrder; }
+  public void setExecutionOrder(Integer executionOrder) { this.executionOrder = executionOrder; }
   public String getStatus() { return status; }
   public void setStatus(String status) { this.status = status; }
   public Long getCreatedBy() { return createdBy; }

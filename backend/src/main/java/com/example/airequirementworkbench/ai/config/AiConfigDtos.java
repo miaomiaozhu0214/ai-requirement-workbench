@@ -84,6 +84,7 @@ public final class AiConfigDtos {
       Long modelConfigId,
       Long promptTemplateId,
       Boolean fallbackToMock,
+      Integer executionOrder,
       String status,
       LocalDateTime updatedAt
   ) {
@@ -109,6 +110,7 @@ public final class AiConfigDtos {
       @NotNull Long modelConfigId,
       @NotNull Long promptTemplateId,
       Boolean fallbackToMock,
+      @Min(0) @Max(9999) Integer executionOrder,
       @NotBlank String status
   ) {
   }

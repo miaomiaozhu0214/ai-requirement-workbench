@@ -189,6 +189,7 @@ export interface AiAbilityConfig {
   modelConfigId: number | null;
   promptTemplateId: number | null;
   fallbackToMock: boolean;
+  executionOrder: number;
   status: string;
   updatedAt?: string;
 }

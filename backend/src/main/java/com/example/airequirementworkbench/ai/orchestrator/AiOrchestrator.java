@@ -2,6 +2,8 @@ package com.example.airequirementworkbench.ai.orchestrator;
 
 import com.example.airequirementworkbench.ai.client.AiClient;
 import com.example.airequirementworkbench.ai.client.AiClientException;
+import com.example.airequirementworkbench.ai.config.AiAbilityConfig;
+import com.example.airequirementworkbench.ai.config.AiAbilityConfigRepository;
 import com.example.airequirementworkbench.ai.dto.AiDtos.CandidatePatch;
 import com.example.airequirementworkbench.ai.dto.AiDtos.CardGenerateResult;
 import com.example.airequirementworkbench.ai.dto.AiDtos.CompletenessResult;
@@ -26,17 +28,41 @@ import com.example.airequirementworkbench.requirement.repository.RequirementCand
 import com.example.airequirementworkbench.requirement.repository.RequirementRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AiOrchestrator {
+  private static final Logger log = LoggerFactory.getLogger(AiOrchestrator.class);
+  private static final int DEFAULT_EXECUTION_ORDER = 100;
+  private static final Map<String, String> ACTION_ABILITY_TYPES = Map.ofEntries(
+      Map.entry("extract_requirement", "requirement_extract"),
+      Map.entry("extract_requirement_info", "requirement_extract"),
+      Map.entry("split_requirement", "requirement_split"),
+      Map.entry("requirement_split", "requirement_split"),
+      Map.entry("check_completeness", "completeness_check"),
+      Map.entry("generate_requirement_card", "card_generate"),
+      Map.entry("generate_card", "card_generate"),
+      Map.entry("card_generate", "card_generate"),
+      Map.entry("search_similar_requirements", "similar_requirement_search"),
+      Map.entry("similar_requirement_search", "similar_requirement_search"),
+      Map.entry("query_requirement", "similar_requirement_search"),
+      Map.entry("generate_reply", "reply_generate"),
+      Map.entry("reply_generate", "reply_generate"),
+      Map.entry("clarify_short_reply", "reply_generate")
+  );
   private final AiClient aiClient;
   private final AiTraceService aiTraceService;
+  private final AiAbilityConfigRepository abilityRepository;
   private final ConversationMessageRepository messageRepository;
   private final RequirementCandidateRepository candidateRepository;
   private final RequirementCandidatePatchRepository patchRepository;
@@ -47,6 +73,7 @@ public class AiOrchestrator {
   public AiOrchestrator(
       AiClient aiClient,
       AiTraceService aiTraceService,
+      AiAbilityConfigRepository abilityRepository,
       ConversationMessageRepository messageRepository,
       RequirementCandidateRepository candidateRepository,
       RequirementCandidatePatchRepository patchRepository,
@@ -55,6 +82,7 @@ public class AiOrchestrator {
   ) {
     this.aiClient = aiClient;
     this.aiTraceService = aiTraceService;
+    this.abilityRepository = abilityRepository;
     this.messageRepository = messageRepository;
     this.candidateRepository = candidateRepository;
     this.patchRepository = patchRepository;
@@ -99,14 +127,11 @@ public class AiOrchestrator {
     if (isStructurallyUnclear(userMessage.getContent())) {
       // “1”、纯数字、纯符号这类输入必须保留 Router Trace，但不能直接驱动需求抽取写库。
       context.addSystemNote("用户输入过短或缺少业务语义，已跳过写入类动作。");
-      actions = actions.stream()
-          .filter(action -> !isWriteAction(action))
-          .toList();
-      if (actions.isEmpty()) {
-        actions = List.of("generate_reply");
-      }
+      actions = filterWriteActionsForStructurallyUnclearInput(actions);
     }
-    for (String action : actions) {
+    List<String> executionPlan = resolveExecutionPlan(actions);
+    log.debug("AI action execution plan resolved. routerActions={}, resolvedActions={}", actions, executionPlan);
+    for (String action : executionPlan) {
       AiActionHandler handler = actionRegistry.get(action);
       if (handler == null) {
         context.addSystemNote("Router 返回了暂不支持的动作：" + action);
@@ -237,6 +262,48 @@ public class AiOrchestrator {
         .toList();
   }
 
+  List<String> resolveExecutionPlan(List<String> actions) {
+    List<ActionPlanItem> actionPlan = new ArrayList<>();
+    for (int index = 0; index < actions.size(); index++) {
+      String action = actions.get(index);
+      actionPlan.add(new ActionPlanItem(action, canonicalAbilityType(action), index));
+    }
+
+    Set<String> abilityTypes = actionPlan.stream()
+        .map(ActionPlanItem::abilityType)
+        .filter(abilityType -> abilityType != null)
+        .collect(Collectors.toSet());
+    Map<String, Integer> executionOrders = abilityTypes.isEmpty()
+        ? Map.of()
+        : abilityRepository.findByAbilityTypeInAndDeletedFalse(abilityTypes).stream()
+            .collect(Collectors.toMap(
+                AiAbilityConfig::getAbilityType,
+                ability -> ability.getExecutionOrder() == null ? DEFAULT_EXECUTION_ORDER : ability.getExecutionOrder(),
+                (left, right) -> left
+            ));
+
+    return resolveExecutionPlan(actions, executionOrders);
+  }
+
+  static List<String> resolveExecutionPlan(List<String> actions, Map<String, Integer> executionOrders) {
+    List<ActionPlanItem> actionPlan = new ArrayList<>();
+    for (int index = 0; index < actions.size(); index++) {
+      String action = actions.get(index);
+      actionPlan.add(new ActionPlanItem(action, canonicalAbilityType(action), index));
+    }
+    return actionPlan.stream()
+        .map(item -> item.withExecutionOrder(item.abilityType() == null
+            ? DEFAULT_EXECUTION_ORDER
+            : executionOrders.getOrDefault(item.abilityType(), DEFAULT_EXECUTION_ORDER)))
+        .sorted(Comparator.comparingInt(ActionPlanItem::executionOrder).thenComparingInt(ActionPlanItem::originalIndex))
+        .map(ActionPlanItem::action)
+        .toList();
+  }
+
+  private static String canonicalAbilityType(String action) {
+    return ACTION_ABILITY_TYPES.get(action);
+  }
+
   private boolean isActionAllowed(String action, OrchestrationContext context) {
     if (List.of("generate_reply", "reply_generate", "clarify_short_reply", "search_similar_requirements", "similar_requirement_search", "query_requirement").contains(action)) {
       return true;
@@ -270,7 +337,14 @@ public class AiOrchestrator {
     return false;
   }
 
-  private boolean isWriteAction(String action) {
+  static List<String> filterWriteActionsForStructurallyUnclearInput(List<String> actions) {
+    List<String> safeActions = actions.stream()
+        .filter(action -> !isWriteAction(action))
+        .toList();
+    return safeActions.isEmpty() ? List.of("generate_reply") : safeActions;
+  }
+
+  private static boolean isWriteAction(String action) {
     return List.of(
         "extract_requirement",
         "extract_requirement_info",
@@ -477,6 +551,16 @@ public class AiOrchestrator {
   }
 
   private record AiCall<T>(T value, AiTrace trace) {
+  }
+
+  private record ActionPlanItem(String action, String abilityType, int originalIndex, int executionOrder) {
+    private ActionPlanItem(String action, String abilityType, int originalIndex) {
+      this(action, abilityType, originalIndex, DEFAULT_EXECUTION_ORDER);
+    }
+
+    private ActionPlanItem withExecutionOrder(int executionOrder) {
+      return new ActionPlanItem(action, abilityType, originalIndex, executionOrder);
+    }
   }
 
   @FunctionalInterface
