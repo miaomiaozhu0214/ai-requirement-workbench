@@ -193,3 +193,42 @@ export interface AiAbilityConfig {
   status: string;
   updatedAt?: string;
 }
+
+export type FeatureNodeType = 'module' | 'feature';
+export type FeatureNodeStatus = 'added' | 'modified' | 'deleted' | 'unchanged';
+export type FeatureContentBlockType = 'overview' | 'rule' | 'field' | 'api' | 'screenshot';
+
+export interface FeatureContentBlock {
+  id: number;
+  featureId: number;
+  blockType: FeatureContentBlockType;
+  title?: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+  sourceRef?: string;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface FeatureNode {
+  id: number;
+  productLineId: number;
+  parentId: number | null;
+  name: string;
+  description?: string;
+  nodeType: FeatureNodeType;
+  status: FeatureNodeStatus;
+  sortOrder: number;
+  children: FeatureNode[];
+  contentBlocks: FeatureContentBlock[];
+}
+
+export interface FeatureHistory {
+  id: number;
+  featureId: number;
+  operationType: 'added' | 'modified' | 'deleted' | 'moved';
+  description: string;
+  operatorId?: number;
+  createdAt: string;
+}
